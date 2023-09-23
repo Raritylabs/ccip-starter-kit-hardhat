@@ -11,12 +11,12 @@ import {MyNFT} from "./MyNFT.sol";
  * DO NOT USE THIS CODE IN PRODUCTION.
  */
 contract DestinationMinter is CCIPReceiver {
-    MyNFT nft;
+    AlphaWolf nft;
 
     event MintCallSuccessfull();
 
     constructor(address router, address nftAddress) CCIPReceiver(router) {
-        nft = MyNFT(nftAddress);
+        nft = AlphaWolf(nftAddress);
     }
 
     function _ccipReceive(
