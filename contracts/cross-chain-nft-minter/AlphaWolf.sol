@@ -1,16 +1,21 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+// SPDX-License-Identifier: BUSL-1.1
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+pragma solidity ^0.8.0;
+
+import "https://github.com/LayerZero-Labs/solidity-examples/blob/main/contracts/token/onft/ONFT721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract AlphaWolf is ERC721Enumerable, Pausable, Ownable {
+/// @title Interface of the UniversalONFT standard
+contract AlphaWolf is ONFT721, Pausable {
     using Counters for Counters.Counter;
     using Strings for uint256;
+    uint public nextMintId;
+    uint public maxMintId;
+    
 
     Counters.Counter private _tokenIdCounter;
 
@@ -20,14 +25,23 @@ contract AlphaWolf is ERC721Enumerable, Pausable, Ownable {
 
     string private baseURI = "ipfs://QmdZivUMzM3SYfCqQg1tEfVWdP8vNAtHpDENAwnCnZnEDM/";
 
-    constructor() ERC721("Alpha Wolf", "AWC") {
+    /// @notice Constructor for the UniversalONFT
+    /// @param _name the name of the token
+    /// @param _symbol the token symbol
+    /// @param _layerZeroEndpoint handles message transmission across chains
+    /// @param _startMintId the starting mint number on this chain
+    /// @param _endMintId the max number of mints on this chain
+    constructor(string memory _name, string memory _symbol, uint256 _minGasToTransfer, address _layerZeroEndpoint, uint _startMintId, uint _endMintId) ONFT721(_name, _symbol, _minGasToTransfer, _layerZeroEndpoint) {
         _tokenIdCounter.increment();
+        nextMintId = _startMintId;
+        maxMintId = _endMintId;
+            
     }
 
     function _baseURI() internal view override returns (string memory) {
         return baseURI;
     }
-
+    
     function setBaseURI(string memory newBaseURI) external onlyOwner {
         baseURI = newBaseURI;
     }
@@ -40,22 +54,28 @@ contract AlphaWolf is ERC721Enumerable, Pausable, Ownable {
         _unpause();
     }
 
-    function mint(address to, uint256 amount) public payable {
+    /// @notice Mint your ONFT
+    function mint(address to, uint256 amount) external payable {
         require(!paused(), "Contract is paused, please try again later");
+        require(nextMintId <= maxMintId, "UniversalONFT721: max mint limit reached");
         require(amount > 0);
-        uint256 supply = totalSupply();
-        require(supply + amount <= maxSupply);
+        
 
         if (msg.sender != owner()) {
             // require(amount <= 3, "You can only mint 3 at once.");
             require(msg.value >= MINT_PRICE * amount);
         }
 
+        uint newId = nextMintId;
+        nextMintId++;
+
         for (uint256 i = 1; i <= amount; i++) {
-            _safeMint(to, supply + i);
+            _safeMint(msg.sender, newId);
+
         }
 
         require(payable(owner()).send(address(this).balance));
+
     }
 
     function withdraw() public onlyOwner() {
