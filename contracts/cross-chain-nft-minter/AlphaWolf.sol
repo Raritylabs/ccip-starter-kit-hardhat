@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 
 // NOTE: this ONFT contract has no public minting logic.
 // must implement your own minting logic in child classes
-contract AlphaWolfHybrid is Ownable, ONFT721Core, ERC721Enumerable, IONFT721, Pausable {
+contract AlphaWolf is Ownable, ONFT721Core, ERC721Enumerable, IONFT721, Pausable {
         using Counters for Counters.Counter;
         using Strings for uint256;
     
